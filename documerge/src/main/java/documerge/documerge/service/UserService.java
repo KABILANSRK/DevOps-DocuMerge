@@ -1,39 +1,61 @@
 package documerge.documerge.service;
 
-import documerge.documerge.project.dto.UserDTO; // Ensure this package path is correct
-
-// If the UserDTO class does not exist, create it in the specified package
-import documerge.documerge.project.model.User;
-import documerge.documerge.project.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import documerge.documerge.dto.UserDTO;
+import documerge.documerge.model.User;
+import documerge.documerge.repository.UserRepositoryJDBC;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Service
 public class UserService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepositoryJDBC userRepository;
 
-    public List<UserDTO> getAllUsers() {
-        return userRepository.findAll().stream().map(user -> {
-            UserDTO userDTO = new UserDTO();
-            userDTO.setId(user.getId());
-            userDTO.setName(user.getName());
-            userDTO.setEmail(user.getEmail());
-            return new ArrayList<>();
-        }).collect(Collectors.toList());
+    public UserService() {
+        this.userRepository = new UserRepositoryJDBC();
     }
 
-    public UserDTO createUser(UserDTO userDTO) {
+    // Signup logic
+    public String signup(UserDTO userDTO) {
+        // Check if user already exists
+        Optional<User> existingUser = userRepository.findByEmail(userDTO.getEmail());
+        if (existingUser.isPresent()) {
+            return "User with this email already exists.";
+        }
+
+        // Save the new user
         User user = new User();
         user.setName(userDTO.getName());
         user.setEmail(userDTO.getEmail());
-        user = userRepository.save(user);
-        userDTO.setId(user.getId());
-        return userDTO;
+        user.setPassword(userDTO.getPassword()); // Hash the password in production!
+        userRepository.saveUser(user);
+        return "User registered successfully!";
+    }
+
+    // Login logic
+    public String login(String email, String password) {
+        // Check if user exists
+        Optional<User> user = userRepository.findByEmail(email);
+        if (user.isPresent() && user.get().getPassword().equals(password)) {
+            return "Login successful!";
+        }
+        return "Invalid email or password.";
+    }
+
+    public boolean authenticateUser(String email, String password) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'authenticateUser'");
+    }
+
+    public List<UserDTO> getAllUsers() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getAllUsers'");
+    }
+
+    public UserDTO createUser(UserDTO userDTO) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'createUser'");
     }
 }
